@@ -1,4 +1,6 @@
 declare const mp: any;
+declare const setTimeout: any;
+declare const setInterval: any;
 
 namespace mpv {
 	export interface OsdOverlay {
@@ -96,12 +98,16 @@ interface AssOptions {
 	fs?: number,
 	an?: AssAlignment,
 
-	color?: {
+	color?: [
 		r: number,
 		g: number,
 		b: number,
 		a: number,
-	},
+	],
+	pos?: [
+		x: number,
+		y: number,
+	]
 }
 
 class AssDraw {
@@ -127,7 +133,7 @@ class AssDraw {
 		this.buf += str.replace(/\\/g, '\\\\').replace(/([{}])/g, '\\$1').replace(/\n/g, '\\N');
 	}
 	private part(str: string) {
-		this.buf += `{\\bord0\\shad0\\pos(0,0)\\p1}${str}{\\p0}`;
+		this.buf += `{\\bord0\\shad0\\pos(0,0)\\p1}${str}{\\p0}\n`;
 	}
 	rect(x: number, y: number, w: number, h: number) {
 		this.part(`m ${x} ${y} l ${x + w} ${y} ${x + w} ${y + h} ${x} ${y + h}`);
@@ -135,7 +141,9 @@ class AssDraw {
 	setOptions(options: AssOptions) {
 		this.buf += '{' + Object.keys(options).map(k => {
 			if (k === 'color') {
-				return `\\c&H${util.hex(options.color!!.b)}${util.hex(options.color!!.g)}${util.hex(options.color!!.r)}&\\1a&H${util.hex(255 - options.color!!.a)}&`;
+				return `\\c&H${util.hex(options.color!![2])}${util.hex(options.color!![1])}${util.hex(options.color!![0])}&\\1a&H${util.hex(255 - options.color!![3])}&`;
+			} else if (k === 'pos') {
+				return `pos(${options.pos!![0]},${options.pos!![1]})`;
 			} else {
 				const v = options[k as keyof AssOptions];
 				return `\\${k}${typeof v === 'boolean' ? (v ? '1' : '0') : v}`;
